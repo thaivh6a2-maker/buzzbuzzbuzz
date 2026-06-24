@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bài 1 - Game Kẹo Nhảy</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      color: #233044;
+      background:
+        radial-gradient(circle at 15% 20%, rgba(255, 238, 132, 0.9), transparent 22rem),
+        radial-gradient(circle at 85% 10%, rgba(92, 214, 184, 0.7), transparent 20rem),
+        linear-gradient(135deg, #f7f4ea, #eaf7ff 60%, #fff0f4);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .game {
+      width: min(920px, 100%);
+      background: rgba(255, 255, 255, 0.86);
+      border: 2px solid rgba(35, 48, 68, 0.12);
+      border-radius: 8px;
+      box-shadow: 0 18px 45px rgba(35, 48, 68, 0.16);
+      overflow: hidden;
+    }
+
+    .topbar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+      border-bottom: 2px solid rgba(35, 48, 68, 0.08);
+      background: #ffffff;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(22px, 3vw, 34px);
+      letter-spacing: 0;
+    }
+
+    .stats {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .stat {
+      min-width: 92px;
+      padding: 8px 10px;
+      border: 1px solid rgba(35, 48, 68, 0.14);
+      border-radius: 8px;
+      background: #f8fbff;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .board {
+      position: relative;
+      height: min(62vh, 520px);
+      min-height: 360px;
+      overflow: hidden;
+      cursor: crosshair;
+      background:
+        linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.1)),
+        repeating-linear-gradient(45deg, rgba(255, 144, 89, 0.16) 0 14px, transparent 14px 28px);
+    }
+
+    .candy {
+      position: absolute;
+      width: 68px;
+      height: 68px;
+      border: 0;
+      border-radius: 50%;
+      font-size: 36px;
+      background: #fff;
+      box-shadow: 0 10px 0 rgba(35, 48, 68, 0.12), inset 0 -6px 0 rgba(35, 48, 68, 0.08);
+      transform: translate(-50%, -50%) rotate(var(--angle));
+      transition: left 0.25s ease, top 0.25s ease, transform 0.15s ease;
+      cursor: pointer;
+    }
+
+    .candy:hover {
+      transform: translate(-50%, -50%) rotate(var(--angle)) scale(1.1);
+    }
+
+    .spark {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      pointer-events: none;
+      animation: pop 0.6s ease-out forwards;
+    }
+
+    @keyframes pop {
+      from {
+        opacity: 1;
+        transform: translate(0, 0) scale(1);
+      }
+      to {
+        opacity: 0;
+        transform: translate(var(--dx), var(--dy)) scale(0.2);
+      }
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      background: #ffffff;
+      border-top: 2px solid rgba(35, 48, 68, 0.08);
+    }
+
+    .message {
+      min-height: 24px;
+      font-weight: 700;
+    }
+
+    button.action {
+      border: 0;
+      border-radius: 8px;
+      padding: 11px 16px;
+      background: #233044;
+      color: #ffffff;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button.action:hover {
+      background: #38506f;
+    }
+
+    @media (max-width: 640px) {
+      .topbar,
+      .controls {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .stats {
+        justify-content: stretch;
+      }
+
+      .stat {
+        flex: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="game">
+    <section class="topbar">
+      <h1>Kẹo Nhảy</h1>
+      <div class="stats">
+        <div class="stat">Điểm: <span id="score">0</span></div>
+        <div class="stat">Còn: <span id="time">30</span>s</div>
+        <div class="stat">Combo: <span id="combo">0</span></div>
+      </div>
+    </section>
+
+    <section class="board" id="board" aria-label="Khu vực chơi">
+      <button class="candy" id="candy" aria-label="Bấm vào kẹo">🍬</button>
+    </section>
+
+    <section class="controls">
+      <div class="message" id="message">Bấm "Chơi lại" để bắt đầu.</div>
+      <button class="action" id="restart">Chơi lại</button>
+    </section>
+  </main>
+
+  <script>
+    const board = document.querySelector("#board");
+    const candy = document.querySelector("#candy");
+    const scoreText = document.querySelector("#score");
+    const timeText = document.querySelector("#time");
+    const comboText = document.querySelector("#combo");
+    const message = document.querySelector("#message");
+    const restartButton = document.querySelector("#restart");
+
+    let score = 0;
+    let timeLeft = 30;
+    let combo = 0;
+    let timerId = null;
+    let isPlaying = false;
+
+    const candyFaces = ["🍬", "🍭", "🍫", "🍩", "🧁"];
+    const sparkColors = ["#ff5a7a", "#ffcf56", "#4dd6b6", "#52a7ff"];
+
+    function randomNumber(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function moveCandy() {
+      const padding = 48;
+      const maxX = board.clientWidth - padding;
+      const maxY = board.clientHeight - padding;
+
+      candy.style.left = `${randomNumber(padding, maxX)}px`;
+      candy.style.top = `${randomNumber(padding, maxY)}px`;
+      candy.style.setProperty("--angle", `${randomNumber(-20, 20)}deg`);
+      candy.textContent = candyFaces[randomNumber(0, candyFaces.length - 1)];
+    }
+
+    function updateScreen() {
+      scoreText.textContent = score;
+      timeText.textContent = timeLeft;
+      comboText.textContent = combo;
+    }
+
+    function createSparks(x, y) {
+      for (let i = 0; i < 14; i++) {
+        const spark = document.createElement("span");
+        spark.className = "spark";
+        spark.style.left = `${x}px`;
+        spark.style.top = `${y}px`;
+        spark.style.background = sparkColors[randomNumber(0, sparkColors.length - 1)];
+        spark.style.setProperty("--dx", `${randomNumber(-90, 90)}px`);
+        spark.style.setProperty("--dy", `${randomNumber(-90, 90)}px`);
+        board.appendChild(spark);
+        setTimeout(() => spark.remove(), 650);
+      }
+    }
+
+    function startGame() {
+      score = 0;
+      timeLeft = 30;
+      combo = 0;
+      isPlaying = true;
+      message.textContent = "Bắt kẹo càng nhanh càng nhiều điểm!";
+      updateScreen();
+      moveCandy();
+
+      clearInterval(timerId);
+      timerId = setInterval(() => {
+        timeLeft--;
+        updateScreen();
+
+        if (timeLeft <= 0) {
+          clearInterval(timerId);
+          isPlaying = false;
+          message.textContent = `Hết giờ! Bạn được ${score} điểm.`;
+        }
+      }, 1000);
+    }
+
+    candy.addEventListener("click", (event) => {
+      if (!isPlaying) return;
+
+      combo++;
+      score += 1 + Math.floor(combo / 5);
+      updateScreen();
+      createSparks(event.offsetX + candy.offsetLeft - 34, event.offsetY + candy.offsetTop - 34);
+      moveCandy();
+    });
+
+    board.addEventListener("click", (event) => {
+      if (!isPlaying || event.target === candy) return;
+      combo = 0;
+      updateScreen();
+      message.textContent = "Trượt rồi, combo về 0!";
+    });
+
+    restartButton.addEventListener("click", startGame);
+
+    moveCandy();
+
+    /*
+      Gợi ý bài tập JS:
+      1. Đổi thời gian chơi từ 20 giây thành 30 giây.
+      2. Thêm âm thanh khi bấm trúng kẹo.
+      3. Sau mỗi 5 điểm, làm kẹo nhỏ hơn hoặc di chuyển nhanh hơn.
+      4. Lưu điểm cao nhất bằng localStorage.
+    */
+  </script>
+</body>
+</html>

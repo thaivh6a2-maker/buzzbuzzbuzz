@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bài 1 - Bấm Mèo Vui</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: #fff7d6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .box {
+      width: 340px;
+      padding: 24px;
+      background: white;
+      border: 3px solid #222;
+      border-radius: 8px;
+      box-shadow: 8px 8px 0 #222;
+    }
+
+    h1 {
+      margin-top: 0;
+    }
+
+    #cat {
+      font-size: 96px;
+      margin: 20px 0;
+      transition: transform 0.2s;
+    }
+
+    #cat.big {
+      transform: scale(1.25) rotate(8deg);
+    }
+    #cat.small {
+      transform: scale(0.75 ) rotate(8deg);
+    }
+
+    button {
+      padding: 12px 18px;
+      margin: 6px;
+      border: 2px solid #222;
+      border-radius: 8px;
+      background: #ffcc33;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #ffdf70;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="box" id="box">
+    <h1>Bấm Mèo Vui</h1>
+    <p id="message">Mèo đang bình thường.</p>
+    <div id="cat">😺</div>
+    <p>Điểm vui: <span id="score">0</span></p>
+
+    <button onclick="makeHappy()">Cho mèo vui</button>
+    <button onclick="makeSad()">Cho mèo buồn</button>
+    <button onclick="resetGame()">Làm lại</button>
+  </div>
+
+  <script>
+    let score=0
+
+    function makeSad() {
+      if (score<1){
+      }else{
+      score = score - 1;
+      }
+
+      document.getElementById("score").textContent = score;
+      document.getElementById("message").textContent = "fuck you";
+      document.getElementById("cat").textContent = "😿";
+      document.getElementById("cat").classList.remove("big");
+      document.getElementById("cat").classList.add("small");
+    }
+
+    function makeHappy() {
+      score = score + 1;
+
+      document.getElementById("score").textContent = score;
+      document.getElementById("message").textContent = "Meo meo! Mèo happy.";
+      document.getElementById("cat").textContent = "😸";
+      document.getElementById("cat").classList.remove("small");
+      document.getElementById("cat").classList.add("big");
+    }
+
+    function resetGame() {
+      score = 0;
+
+      document.getElementById("score").textContent = score;
+      document.getElementById("message").textContent = "Mèo đang bình thường.";
+      document.getElementById("cat").textContent = "😺";
+      document.getElementById("cat").classList.remove("big");
+      document.getElementById("cat").classList.remove("small");
+    }
+
+    /*
+      Bài tập cho học viên:
+      1. Đổi emoji con mèo thành emoji khác.
+      2. Khi bấm nút, đổi câu thông báo thành câu của bạn.
+      3. Thêm 1 nút làm mèo buồn: đổi emoji thành 😿.
+      4. Đổi màu nền của trang bằng JavaScript.
+    */
+  </script>
+</body>
+
+</html>
