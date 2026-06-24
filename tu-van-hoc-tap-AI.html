@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vibe Gì Nghề Đó -  FPT Academy International</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Lexend', sans-serif;
+            background: #fdfdfd;
+        }
+
+        .step-card {
+            display: none;
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .step-card.active {
+            display: block;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .option-card {
+            transition: all 0.25s ease;
+            cursor: pointer;
+            border: 2px solid #f1f5f9;
+        }
+
+        .option-card:hover {
+            border-color: #cbd5e1;
+            background-color: #f8fafc;
+        }
+
+        .option-card.selected {
+            border-color: #F37021;
+            background-color: #fff7ed;
+            transform: scale(1.02);
+        }
+
+        .fpt-gradient {
+            background: linear-gradient(135deg, #F37021 0%, #ff8c42 100%);
+        }
+
+        .progress-indicator {
+            transition: width 0.6s cubic-bezier(0.65, 0, 0.35, 1);
+        }
+
+        /* AI Result Formatting */
+        #ai-result h2 { font-size: 1.5rem; font-weight: 800; color: #f37021; margin: 1.5rem 0 1rem; }
+        #ai-result h3 { font-size: 1.2rem; font-weight: 700; color: #0f172a; margin-top: 1.5rem; border-left: 4px solid #F37021; padding-left: 12px; }
+        #ai-result p { margin-bottom: 1rem; line-height: 1.7; color: #334155; }
+        #ai-result strong { color: #F37021; }
+        #ai-result ul { margin-bottom: 1.5rem; list-style: none; padding-left: 0; }
+        #ai-result li { position: relative; padding-left: 1.8rem; margin-bottom: 0.6rem; color: #475569; }
+        #ai-result li::before { content: '✨'; position: absolute; left: 0; top: 0; }
+    </style>
+</head>
+<body class="text-slate-800 antialiased bg-slate-50/50">
+
+    <div class="min-h-screen flex flex-col items-center px-4 py-8 md:py-12">
+        <!-- Brand -->
+        <div class="mb-8 text-center">
+            <div class="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full mb-4 shadow-sm border border-slate-100">
+                <span class="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span>
+                <span class="text-orange-600 text-[10px] font-bold uppercase tracking-widest">FPT Academy International</span>
+            </div>
+            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Hợp Nghề Gì - Chốt Nghề Đó! 🚀</h1>
+            <p class="text-slate-500 mt-2">Đừng chọn đại, hãy để AI "soi" đúng tần số của bạn.</p>
+        </div>
+
+        <!-- Progress Tracker -->
+        <div class="w-full max-w-xl mb-10">
+            <div class="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
+                <div id="progress" class="progress-indicator h-full fpt-gradient w-[20%]"></div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="w-full max-w-xl">
+            
+            <!-- STEP 1: Name -->
+            <div id="step-1" class="step-card active">
+                <div class="bg-white p-8 rounded-[32px] shadow-sm border border-slate-100 text-center">
+                    <div class="w-20 h-20 bg-orange-50 text-orange-500 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">
+                        <i class="fas fa-id-card"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-6">Tên của bạn là gì nè?</h3>
+                    <input type="text" id="user-name" placeholder="Ví dụ: Anh Tuấn, Linh Chi..." 
+                        class="w-full px-6 py-4 bg-slate-50 border-2 border-transparent focus:border-orange-400 rounded-2xl outline-none text-lg transition-all text-center font-bold">
+                    <button onclick="nextStep(2)" class="w-full mt-8 py-4 fpt-gradient text-white rounded-2xl font-bold text-lg shadow-lg shadow-orange-500/30 hover:shadow-orange-500/40 transition-all">
+                        Khám phá ngay thôi!
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 2: Lifestyle / Hobbies -->
+            <div id="step-2" class="step-card">
+                <h3 class="text-xl font-bold mb-6 flex items-center gap-2"><span class="text-orange-500">01.</span> Cuối tuần rảnh rỗi, bạn thường làm gì?</h3>
+                <div class="grid grid-cols-1 gap-4" id="q-hobbies">
+                    <div class="option-card p-5 bg-white rounded-2xl flex items-center gap-4" data-value="vọc vạch máy tính, chơi game, xem review đồ công nghệ">
+                        <div class="text-2xl">🕹️</div>
+                        <div class="font-medium text-slate-700">Chúa tể vọc máy, cao thủ game</div>
+                    </div>
+                    <div class="option-card p-5 bg-white rounded-2xl flex items-center gap-4" data-value="vẽ vời, edit video TikTok xịn xò, tìm tòi cái đẹp">
+                        <div class="text-2xl">🎞️</div>
+                        <div class="font-medium text-slate-700">Nghệ sĩ sáng tạo, đam mê visual</div>
+                    </div>
+                    <div class="option-card p-5 bg-white rounded-2xl flex items-center gap-4" data-value="đi cafe hóng drama, kết nối mọi người, thích buôn bán">
+                        <div class="text-2xl">📢</div>
+                        <div class="font-medium text-slate-700">Nhà ngoại giao, thích truyền thông</div>
+                    </div>
+                    <div class="option-card p-5 bg-white rounded-2xl flex items-center gap-4" data-value="giải đố, sắp xếp mọi thứ logic, thích sự bảo mật">
+                        <div class="text-2xl">🕵️</div>
+                        <div class="font-medium text-slate-700">Chiến lược gia, ưa sự kín kẽ</div>
+                    </div>
+                </div>
+                <div class="flex gap-4 mt-8">
+                    <button onclick="prevStep(1)" class="flex-1 py-4 font-bold text-slate-400">Quay lại</button>
+                    <button onclick="nextStep(3)" class="flex-[2] py-4 fpt-gradient text-white rounded-2xl font-bold">Tiếp tục đi!</button>
+                </div>
+            </div>
+
+            <!-- STEP 3: Vibe / Environment -->
+            <div id="step-3" class="step-card">
+                <h3 class="text-xl font-bold mb-6 flex items-center gap-2"><span class="text-orange-500">02.</span> Nơi nào làm bạn thấy "chill" nhất khi làm việc?</h3>
+                <div class="grid grid-cols-2 gap-4" id="q-vibe">
+                    <div class="option-card p-6 bg-white rounded-2xl text-center" data-value="văn phòng công ty lớn, hiện đại và sang trọng">
+                        <div class="text-3xl mb-3">🏢</div>
+                        <div class="text-sm font-bold">Văn phòng xịn xò mát lạnh</div>
+                    </div>
+                    <div class="option-card p-6 bg-white rounded-2xl text-center" data-value="phòng studio đầy màu sắc, nghệ thuật">
+                        <div class="text-3xl mb-3">🎨</div>
+                        <div class="text-sm font-bold">Studio sáng tạo</div>
+                    </div>
+                    <div class="option-card p-6 bg-white rounded-2xl text-center" data-value="ngồi quán cafe, làm việc tự do không gò bó">
+                        <div class="text-3xl mb-3">☕</div>
+                        <div class="text-sm font-bold">Tự do không gò bó</div>
+                    </div>
+                    <div class="option-card p-6 bg-white rounded-2xl text-center" data-value="phòng lab yên tĩnh, tập trung vào kỹ thuật">
+                        <div class="text-3xl mb-3">🛡️</div>
+                        <div class="text-sm font-bold">Phòng Lab bảo mật</div>
+                    </div>
+                </div>
+                <div class="flex gap-4 mt-8">
+                    <button onclick="prevStep(2)" class="flex-1 py-4 font-bold text-slate-400">Quay lại</button>
+                    <button onclick="nextStep(4)" class="flex-[2] py-4 fpt-gradient text-white rounded-2xl font-bold">Gần xong rồi nè!</button>
+                </div>
+            </div>
+
+            <!-- STEP 4: Working Style -->
+            <div id="step-4" class="step-card">
+                <h3 class="text-xl font-bold mb-6 flex items-center gap-2"><span class="text-orange-500">03.</span> Trong một dự án, bạn muốn mình đóng vai gì?</h3>
+                <div class="grid grid-cols-1 gap-4" id="q-role">
+                    <div class="option-card p-5 bg-white rounded-2xl flex items-center gap-4" data-value="người xây dựng mã nguồn, tạo ra tính năng sản phẩm">
+                        <div class="w-10 h-10 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center"><i class="fas fa-code"></i></div>
+                        <div><div class="font-bold">Người xây dựng (Dev)</div><p class="text-xs text-slate-500">Thích làm ra sản phẩm chạy được.</p></div>
+                    </div>
+                    <div class="option-card p-5 bg-white rounded-2xl flex items-center gap-4" data-value="người thiết kế giao diện, lo phần diện mạo thật đẹp">
+                        <div class="w-10 h-10 bg-pink-50 text-pink-500 rounded-full flex items-center justify-center"><i class="fas fa-palette"></i></div>
+                        <div><div class="font-bold">Phù thủy hình ảnh</div><p class="text-xs text-slate-500">Thích mọi thứ phải thật bắt mắt.</p></div>
+                    </div>
+                    <div class="option-card p-5 bg-white rounded-2xl flex items-center gap-4" data-value="người đưa sản phẩm ra thị trường, tiếp cận khách hàng">
+                        <div class="w-10 h-10 bg-orange-50 text-orange-500 rounded-full flex items-center justify-center"><i class="fas fa-bullhorn"></i></div>
+                        <div><div class="font-bold">Nhà lan tỏa</div><p class="text-xs text-slate-500">Thích kết nối và làm Marketing.</p></div>
+                    </div>
+                    <div class="option-card p-5 bg-white rounded-2xl flex items-center gap-4" data-value="người bảo vệ hệ thống, ngăn chặn mọi cuộc tấn công">
+                        <div class="w-10 h-10 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center"><i class="fas fa-user-secret"></i></div>
+                        <div><div class="font-bold">Vệ sĩ mạng</div><p class="text-xs text-slate-500">Thích sự an toàn và ổn định.</p></div>
+                    </div>
+                </div>
+                <div class="flex gap-4 mt-8">
+                    <button onclick="prevStep(3)" class="flex-1 py-4 font-bold text-slate-400">Quay lại</button>
+                    <button onclick="generateResult()" class="flex-[2] py-4 bg-slate-900 text-white rounded-2xl font-bold shadow-xl">Xem "định mệnh" thôi! 🔮</button>
+                </div>
+            </div>
+
+            <!-- Loading -->
+            <div id="loading-step" class="step-card text-center py-20">
+                <div class="relative w-24 h-24 mx-auto mb-8">
+                    <div class="absolute inset-0 border-4 border-orange-200 rounded-full"></div>
+                    <div class="absolute inset-0 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+                    <div class="absolute inset-0 flex items-center justify-center text-orange-500 text-2xl">
+                        <i class="fas fa-magic"></i>
+                    </div>
+                </div>
+                <h3 class="text-xl font-bold text-slate-800">AI đang "soi" tiềm năng của bạn...</h3>
+                <p class="text-slate-400 text-sm mt-2">Chờ xíu, chuyên gia FPT AI Agent đang phân tích nha!</p>
+            </div>
+
+            <!-- Result -->
+            <div id="result-step" class="step-card">
+                <div class="bg-white rounded-[40px] shadow-2xl shadow-slate-200/50 overflow-hidden border border-slate-100">
+                    <div class="fpt-gradient p-10 text-white text-center">
+                        <p class="text-sm font-medium opacity-80 uppercase tracking-widest mb-2">Kết quả phân tích</p>
+                        <h2 id="res-name" class="text-3xl font-black">CHÀO BẠN!</h2>
+                    </div>
+                    <div class="p-8 md:p-10">
+                        <div id="ai-result" class="prose max-w-none">
+                            <!-- Nội dung AI sẽ đổ vào đây -->
+                        </div>
+                        
+                        <div class="mt-10 pt-8 border-t border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <button onclick="resetForm()" class="py-4 bg-slate-50 text-slate-500 rounded-2xl font-bold hover:bg-slate-100 transition-all flex items-center justify-center gap-2">
+                                <i class="fas fa-redo"></i> Chọn lại xem sao
+                            </button>
+                            <a href="https://fpt.edu.vn" target="_blank" class="py-4 fpt-gradient text-white rounded-2xl font-bold text-center shadow-lg flex items-center justify-center gap-2">
+                                Nhập học FPT ngay <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <footer class="mt-16 text-center text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] pb-10">
+            Viện đào tạo quốc tế FPT • AI Career Advisor 2024
+        </footer>
+    </div>
+
+    <script>
+        const apiKey = "----"; //  Dán API Key của bạn vào đây thay cho -----
+        const MODEL= "----"; // ĐIỀN MODEL sử dụng của gemini
+        let userData = {
+            name: "",
+            hobby: "",
+            vibe: "",
+            role: ""
+        };
+
+        document.querySelectorAll('.option-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const parent = this.parentElement;
+                parent.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+                
+                const val = this.getAttribute('data-value');
+                if (parent.id === 'q-hobbies') userData.hobby = val;
+                if (parent.id === 'q-vibe') userData.vibe = val;
+                if (parent.id === 'q-role') userData.role = val;
+            });
+        });
+
+        function updateProgress(step) {
+            document.getElementById('progress').style.width = (step * 20) + "%";
+        }
+
+        function nextStep(step) {
+            if (step === 2) {
+                const name = document.getElementById('user-name').value.trim();
+                if (!name) return alert("Cho mình xin cái tên xịn xò của bạn đã!");
+                userData.name = name;
+            }
+            if (step === 3 && !userData.hobby) return alert("Chọn một sở thích để AI còn biết đường mà tính chứ!");
+            if (step === 4 && !userData.vibe) return alert("Không gian làm việc quyết định vibe đó, chọn đi nào!");
+
+            document.querySelectorAll('.step-card').forEach(s => s.classList.remove('active'));
+            document.getElementById(`step-${step}`).classList.add('active');
+            updateProgress(step);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function prevStep(step) {
+            document.querySelectorAll('.step-card').forEach(s => s.classList.remove('active'));
+            document.getElementById(`step-${step}`).classList.add('active');
+            updateProgress(step);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        async function generateResult() {
+            if (!userData.role) return alert("Bước cuối rồi, chọn nốt vai trò đi bạn ơi!");
+
+            document.querySelectorAll('.step-card').forEach(s => s.classList.remove('active'));
+            document.getElementById('loading-step').classList.add('active');
+            updateProgress(5);
+
+            const systemPrompt = `Bạn là chuyên gia tư vấn hướng nghiệp vui tính tại FPT International. 
+            Dựa trên thông tin người dùng cung cấp, hãy:
+            1. Nhận xét vui về tính cách của họ (đặt tên cho hệ tính cách đó, ví dụ: Hệ Sáng Tạo Vô Đối, Hệ Code Thủ Xuyên Đêm...).
+            2. Đưa ra 2-3 sự lựa chọn nghề nghiệp phù hợp nhất (Lập trình, Thiết kế, Marketing, An ninh mạng, AI).
+            3. Giải thích cực kỳ rõ "Tại sao lại hợp với bạn?" bằng cách kết nối với sở thích, vibe và vai trò họ đã chọn.
+            4. Chốt hạ đơn vị đào tạo cụ thể trong hệ thống FPT (FPT Aptech, FPT Arena, FPT Skillking, FPT Jetking, FPT AI Agent).
+            
+            Ngôn ngữ: Tiếng Việt, phong cách Gen Z, hài hước, tích cực, truyền cảm hứng. Dùng nhiều icon.`;
+
+            const userPrompt = `----------`; // HÃY TẠO PROMPT NHÉ
+
+            let retries = 0;
+            while (retries < 5) {
+                try {
+                    const response = await fetch(`HÃY ĐIỀN URL ĐỂ GỌI ĐẾN AI`, { // HÃY ĐIỀN URL API GEMINI ĐỂ GỌI ĐẾN BỘ NÃO NÀO
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: userPrompt }] }],
+                            systemInstruction: { parts: [{ text: systemPrompt }] }
+                        })
+                    });
+
+                    const data = await response.json();
+                    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                    if (text) {
+                        renderResult(text);
+                        return;
+                    }
+                } catch (e) {
+                    retries++;
+                    await new Promise(r => setTimeout(r, 1000 * retries));
+                }
+            }
+            alert("Hình như có lỗi đường truyền AI, thử lại nhé bạn!");
+            resetForm();
+        }
+
+        function renderResult(md) {
+            document.getElementById('res-name').innerText = `CHÀO ${userData.name.toUpperCase()}!`;
+            
+            const html = md
+                .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
+                .replace(/^\* (.*$)/gim, '<li>$1</li>')
+                .replace(/^\- (.*$)/gim, '<li>$1</li>')
+                .replace(/\n\n/g, '<p></p>')
+                .replace(/\n/g, '<br>');
+
+            document.getElementById('ai-result').innerHTML = html;
+            document.getElementById('loading-step').classList.remove('active');
+            document.getElementById('result-step').classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function resetForm() {
+            userData = { name: "", hobby: "", vibe: "", role: "" };
+            document.getElementById('user-name').value = "";
+            document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+            nextStep(1);
+        }
+    </script>
+</body>
+</html>
