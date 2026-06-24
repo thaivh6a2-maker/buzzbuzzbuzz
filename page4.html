@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fan</title>
+</head>
+<link rel="stylesheet" href="css/page3.css">
+<body>
+    <div  class="fan" id="fan-box">
+        <img src="imgs/fan.png">
+    </div>
+    <ul>
+        <li><button type="button" onclick="quatquay()">Fan Turn On</button></li>
+        <li><button type="button" onclick="quatstop()">Fan Turn Off</button></li>
+        <li><button type="button" onclick="battery()">ON/OFF</button></li>
+    </ul>
+    <script type="text/javascript">
+        function quatquay(){
+            var f = document.querySelector("#fan-box");
+            f.classList.add("box-xoay")
+        }
+        function quatstop(){
+            var f = document.querySelector("#fan-box");
+            f.classList.remove("box-xoay");
+        }
+        var y = 0;
+        function battery(){
+            if (y = 0){
+               quatquay();
+                y = 1;
+            }else{
+                quatstop();
+                y=0;
+            }
+        }
+    </script>
+</body>
+</html>

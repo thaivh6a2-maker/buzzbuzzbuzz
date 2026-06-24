@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tuyển trạch viên - AI 2.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body { background-color: #020617; color: #e2e8f0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        .card { background: #1e293b; border: 1px solid #334155; border-radius: 1rem; }
+        .btn-primary { background: #38bdf8; color: #020617; font-weight: bold; transition: 0.3s; }
+        .btn-primary:hover:not(:disabled) { background: #7dd3fc; transform: translateY(-2px); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #38bdf8; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
+    </style>
+</head>
+<body class="p-4">
+    <div class="max-w-6xl mx-auto">
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+            <div>
+                <h1 class="text-3xl font-extrabold text-white uppercase italic tracking-tighter">Tuyển trạch viên <span class="text-sky-400 font-black">AI 2.0</span></h1>
+                <p class="text-slate-400">Phân tích chiến thuật tự động với AI</p>
+            </div>
+            <div id="fileStatus" class="hidden flex items-center gap-2 bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full text-xs border border-emerald-500/20">
+                <i class="fa-solid fa-check"></i> Đã nạp dữ liệu cầu thủ
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Sidebar: Controls -->
+            <div class="lg:col-span-1 space-y-4">
+                <div class="card p-6 shadow-xl border-t-4 border-sky-500">
+                    <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-sky-400"></i> Tiêu chí tuyển chọn
+                    </h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-xs text-slate-400 font-bold uppercase tracking-widest">Vị trí cần tìm</label>
+                            <select id="pos" class="w-full bg-slate-900 border border-slate-700 p-3 rounded mt-1 outline-none focus:ring-2 focus:ring-sky-500">
+                                <option value="ALL">Tất cả vị trí</option>
+                                <option value="ST">Tiền đạo (ST/CF)</option>
+                                <!-- BỔ SUNG CÁC VỊ TRÍ THÊM VÀO CHO TUYỂN TRẠCH VIÊN BIẾT-->
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-400 font-bold uppercase tracking-widest">Ngân sách tối đa (Triệu €)</label>
+                            <input type="number" id="budget" value="100" class="w-full bg-slate-900 border border-slate-700 p-3 rounded mt-1 outline-none focus:ring-2 focus:ring-emerald-500 font-mono text-emerald-400">
+                        </div>
+                        <button onclick="runScout()" id="btnAction" class="w-full btn-primary p-4 rounded-xl flex justify-center items-center gap-3 text-lg shadow-lg">
+                            <i class="fa-solid fa-magnifying-glass-chart"></i> CHẠY AGENT
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card p-4 text-xs text-slate-500">
+                    <p><i class="fa-solid fa-info-circle mr-1"></i> <b>Viện đào tạo quốc tế FPT</b></p>
+                    <ul class="mt-2 space-y-1">
+                        <li>Model: <span class="text-slate-300">FPT AI Agent</span></li>
+                        <li>Chế độ: <span class="text-slate-300">Trải nghiệm</span></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Upload Zone -->
+                <input type="file" id="csvInput" class="hidden" accept=".csv" onchange="handleFileUpload(event)">
+                <div id="uploadZone" class="card p-6 border-dashed border-2 border-slate-700 flex flex-col items-center justify-center cursor-pointer hover:border-sky-500 transition-all group" onclick="document.getElementById('csvInput').click()">
+                    <div id="uploadZoneContent" class="flex flex-col items-center justify-center text-center">
+                        <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-500 mb-2 group-hover:text-sky-400"></i>
+                        <p class="font-bold">Nhấp để chọn file players.csv</p>
+                        <p class="text-slate-500 text-xs">Dữ liệu cầu thủ sẽ được lưu tạm trong bộ nhớ</p>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="card p-5">
+                    <div class="flex justify-between items-center mb-3">
+                        <h2 class="text-md font-bold flex items-center gap-2">
+                            <i class="fa-solid fa-list-check text-emerald-400"></i> Danh sách sàng lọc sơ bộ
+                        </h2>
+                        <span id="playerCount" class="text-[10px] font-mono text-slate-500 bg-slate-900 px-2 py-1 rounded">0 players</span>
+                    </div>
+                    <div class="overflow-x-auto max-h-[250px] overflow-y-auto custom-scrollbar rounded-lg border border-slate-700/50">
+                        <table class="w-full text-xs text-left">
+                            <thead class="bg-slate-900 text-slate-400 sticky top-0 uppercase font-black">
+                                <tr>
+                                    <th class="p-3">Cầu thủ</th>
+                                    <th class="p-3">CLB</th>
+                                    <th class="p-3">Giá Trị</th>
+                                    <th class="p-3 text-center">Tốc độ/Dứt điểm</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody" class="divide-y divide-slate-800">
+                                <tr><td colspan="4" class="p-8 text-center text-slate-600 italic">Vui lòng tải file lên...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- AI Output -->
+                <div class="card p-6 min-h-[300px] border-l-4 border-sky-400 relative shadow-inner">
+                    <div id="aiLoader" class="hidden absolute inset-0 bg-slate-900/90 flex flex-col items-center justify-center z-10 rounded-r-2xl">
+                        <div class="loader mb-3 h-10 w-10"></div>
+                        <p id="loaderText" class="text-sky-400 font-bold text-[10px] uppercase tracking-widest text-center px-6">Đang yêu cầu Gemini phân tích...</p>
+                    </div>
+                    <h2 class="text-md font-bold mb-3 text-sky-400 flex items-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Đề xuất từ Tuyển trạch viên AI 2.0
+                    </h2>
+                    <div id="aiResponse" class="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap">Dữ liệu phân tích chuyên sâu sẽ xuất hiện tại đây...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // CẤU HÌNH CỦA BẠN (ĐIỀN VÀO ĐÂY)
+        const CONFIG = {
+            API_KEY: "AQ.Ab8RN6IslmpDgP51bKHvfvLBwU-2T2OjIB9m20nxTjc4BjIYUA", //  Dán API Key của bạn vào đây thay cho -----
+            MODEL: "gemini-2.5-flash"
+        };
+
+        let allPlayers = [];
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            Papa.parse(file, {
+                header: true, dynamicTyping: true, skipEmptyLines: true,
+                complete: function(results) {
+                    allPlayers = results.data;
+                    document.getElementById('fileStatus').classList.remove('hidden');
+                    document.getElementById('playerCount').innerText = `${allPlayers.length} players found`;
+                    document.getElementById('uploadZoneContent').innerHTML = `
+                        <i class="fa-solid fa-circle-check text-3xl text-emerald-500 mb-2"></i>
+                        <p class="font-bold text-emerald-400 italic">${file.name}</p>
+                    `;
+                    renderTable(allPlayers.slice(0, 8));
+                }
+            });
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = data.length === 0 ? '<tr><td colspan="4" class="p-8 text-center text-slate-600">Không tìm thấy ai phù hợp.</td></tr>' : 
+            data.map(p => `
+                <tr class="hover:bg-slate-800 transition">
+                    <td class="p-3">
+                        <div class="font-bold text-slate-200">${p.Name || p.name || 'N/A'}</div>
+                        <div class="text-[9px] text-slate-500 font-bold uppercase">${p.Position || p.pos || 'N/A'} • ${p.Age || p.age || '?'} tuổi</div>
+                    </td>
+                    <td class="p-3 text-slate-400">${p.Club || p.club || 'N/A'}</td>
+                    <td class="p-3 text-emerald-400 font-mono">${p.Value_M_Euro || p.price || 0}M€</td>
+                    <td class="p-3 text-center">
+                        <span class="text-slate-500">${p.Speed || p.speed || 0}</span> / 
+                        <span class="text-slate-500">${p.Finishing || p.finish || 0}</span>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function fetchWithRetry(url, options, retries = 3) {
+            let delay = 3000;
+            const loaderText = document.getElementById('loaderText');
+            
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    const data = await response.json();
+                    
+                    if (response.status === 429) { 
+                        loaderText.innerText = `GIỚI HẠN TỐC ĐỘ! ĐANG TỰ ĐỘNG THỬ LẠI LẦN ${i+1}...`;
+                        await new Promise(res => setTimeout(res, delay));
+                        delay *= 2; 
+                        continue;
+                    }
+                    return { ok: response.ok, status: response.status, data: data };
+                } catch (err) {
+                    if (i === retries - 1) throw err;
+                    await new Promise(res => setTimeout(res, delay));
+                }
+            }
+        }
+
+        async function runScout() {
+            if (allPlayers.length === 0) return alert("Vui lòng tải file CSV lên trước!");
+            if (!CONFIG.API_KEY) return alert("Bạn chưa điền API Key vào trong code!");
+
+            const targetPos = document.getElementById('pos').value;
+            const budget = parseInt(document.getElementById('budget').value);
+            const btn = document.getElementById('btnAction');
+            const loader = document.getElementById('aiLoader');
+            const aiResponse = document.getElementById('aiResponse');
+            const loaderText = document.getElementById('loaderText');
+            
+            btn.disabled = true;
+            loader.classList.remove('hidden');
+            loaderText.innerText = "Đang gửi dữ liệu phân tích cho AI.";
+            aiResponse.innerHTML = "";
+
+            // Lọc dữ liệu thô gửi cho AI (Giới hạn 15 cầu thủ hàng đầu để tiết kiệm Token)
+            const filtered = allPlayers.filter(p => {
+                const pPos = (p.Position || p.pos || "").toString().toUpperCase();
+                const pPrice = parseFloat(p.Value_M_Euro || p.price || 0);
+                
+                let matchesPos = targetPos === "ALL";
+                if (targetPos === "Winger") matchesPos = pPos.includes("LW") || pPos.includes("RW") || pPos.includes("RM") || pPos.includes("LM");
+                else if (targetPos === "Midfielder") matchesPos = pPos.includes("CM") || pPos.includes("CAM") || pPos.includes("CDM");
+                else if (targetPos === "Defender") matchesPos = pPos.includes("CB") || pPos.includes("LB") || pPos.includes("RB");
+                else if (targetPos === "ST") matchesPos = pPos.includes("ST") || pPos.includes("CF");
+                else if (targetPos === "GK") matchesPos = pPos.includes("GK");
+
+                return matchesPos && (pPrice <= budget);
+            }).sort((a, b) => (b.Overall || b.Speed || 0) - (a.Overall || a.Speed || 0)).slice(0, 15);
+
+            renderTable(filtered.slice(0, 8));
+
+            if (filtered.length === 0) {
+                aiResponse.innerText = "Không tìm thấy cầu thủ nào phù hợp với yêu cầu.";
+                loader.classList.add('hidden');
+                btn.disabled = false;
+                return;
+            }
+
+            const prompt = `Bạn là một chuyên gia tuyển trạch bóng đá. Hãy phân tích danh sách sau: ${JSON.stringify(filtered.map(p => ({tên: p.Name, clb: p.Club, giá: p.Value_M_Euro, tốc_độ: p.Speed, dứt_điểm: p.Finishing, vị_trí: p.Position})))}. 
+            Ngân sách: ${budget} triệu Euro. Hãy chọn ra 3 cái tên tối ưu nhất để đầu tư. Phân tích rõ lý do tại sao (ưu điểm, giá trị so với thị trường). Viết bằng Tiếng Việt, ngắn gọn, súc tích.`;
+
+            const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${CONFIG.MODEL}:generateContent?key=${CONFIG.API_KEY}`;
+
+            try {
+                const result = await fetchWithRetry(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                });
+
+                if (result.ok && result.data?.candidates?.[0]?.content?.parts?.[0]?.text) {
+                    let text = result.data.candidates[0].content.parts[0].text;
+                    aiResponse.innerHTML = text
+                        .replace(/\n/g, '<br>')
+                        .replace(/\*\*(.*?)\*\*/g, '<b class="text-sky-400">$1</b>')
+                        .replace(/\* (.*?)(<br>|$)/g, '<div class="flex gap-2 mb-1"><span class="text-sky-500">•</span><span>$1</span></div>');
+                } else {
+                    throw new Error(result.data?.error?.message || "Lỗi API");
+                }
+            } catch (err) {
+                aiResponse.innerHTML = `
+                    <div class="p-4 bg-red-900/20 border border-red-500/30 rounded-lg text-red-400 text-xs">
+                        <b>LỖI QUOTA/API:</b> ${err.message}<br><br>
+                        Hệ thống bản miễn phí thường có giới hạn yêu cầu thấp. Vui lòng đợi 1 phút rồi thử lại.
+                    </div>`;
+            } finally {
+                loader.classList.add('hidden');
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
