@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Food Agent - Gợi Ý Món Ăn</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .chat-bubble {
+            max-width: 85%;
+            animation: fadeIn 0.3s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .dot-pulse {
+            display: inline-block;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+        body { background-color: #f8fafc; }
+        #chat-container::-webkit-scrollbar { width: 4px; }
+        #chat-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
+</head>
+<body class="h-screen flex items-center justify-center p-0 sm:p-4">
+
+    <div class="w-full max-w-2xl h-full sm:h-[90vh] bg-white sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-slate-100">
+        <!-- Header -->
+        <header class="bg-white border-b p-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white shadow-lg shadow-indigo-200">
+                    <i class="fas fa-robot text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-slate-800 leading-none">AI Food Agent</h1>
+                    <span class="text-[10px] text-green-500 font-bold uppercase tracking-wider">FPT AI Agent</span>
+                </div>
+            </div>
+            <button onclick="resetApp()" class="w-10 h-10 rounded-full hover:bg-slate-100 transition-colors text-slate-500">
+                <i class="fas fa-redo-alt"></i>
+            </button>
+        </header>
+
+        <!-- Chat History -->
+        <main id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50">
+            <!-- Messages will be injected here -->
+        </main>
+
+        <!-- Interaction Area -->
+        <footer class="p-4 bg-white border-t">
+            <!-- Dynamic Controls based on step -->
+            <div id="controls-area" class="space-y-3">
+                <!-- Input for Budget -->
+                <div id="budget-input" class="relative flex items-center">
+                    <input id="user-input" type="text" 
+                        placeholder="Nhập số tiền bạn có (VD: 100k)..." 
+                        class="w-full pl-4 pr-12 py-4 bg-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all border-none">
+                    <button onclick="handleBudgetSubmit()" class="absolute right-2 w-10 h-10 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all flex items-center justify-center shadow-md">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+
+                <!-- Status Buttons (Hidden by default) -->
+                <div id="status-buttons" class="hidden flex gap-2 flex-wrap justify-center animate-in">
+                    <button onclick="handleSelection('status', 'Độc thân vui tính')" class="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 hover:border-indigo-500 hover:text-indigo-600 rounded-full shadow-sm transition-all font-medium">
+                        🕶️ Độc thân
+                    </button>
+                    <button onclick="handleSelection('status', 'Đang có gấu (hẹn hò)')" class="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 hover:border-pink-500 hover:text-pink-600 rounded-full shadow-sm transition-all font-medium">
+                        🧸 Có Gấu
+                    </button>
+                </div>
+
+                <!-- Vibe Buttons (Hidden by default) -->
+                <div id="vibe-buttons" class="hidden grid grid-cols-2 gap-2">
+                    <button onclick="handleSelection('vibe', 'Healthy & Balance')" class="p-4 bg-emerald-50 text-emerald-700 rounded-2xl border border-emerald-100 hover:bg-emerald-100 transition-all text-sm font-bold flex flex-col items-center gap-1">
+                        <i class="fas fa-leaf"></i> Healthy
+                    </button>
+                    <button onclick="handleSelection('vibe', 'Nhanh gọn lẹ')" class="p-4 bg-blue-50 text-blue-700 rounded-2xl border border-blue-100 hover:bg-blue-100 transition-all text-sm font-bold flex flex-col items-center gap-1">
+                        <i class="fas fa-bolt"></i> Nhanh gọn
+                    </button>
+                    <button onclick="handleSelection('vibe', 'Chill thong thả')" class="p-4 bg-indigo-50 text-indigo-700 rounded-2xl border border-indigo-100 hover:bg-indigo-100 transition-all text-sm font-bold flex flex-col items-center gap-1">
+                        <i class="fas fa-sparkles"></i> Chill
+                    </button>
+                    <button onclick="handleSelection('vibe', 'Xõa hết mình')" class="p-4 bg-orange-50 text-orange-700 rounded-2xl border border-orange-100 hover:bg-orange-100 transition-all text-sm font-bold flex flex-col items-center gap-1">
+                        <i class="fas fa-fire"></i> Xõa
+                    </button>
+                </div>
+
+                <!-- Reset Button (Hidden by default) -->
+                <button id="reset-btn" onclick="resetApp()" class="hidden w-full py-4 bg-slate-800 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-slate-900 shadow-xl transition-all">
+                    <i class="fas fa-utensils"></i> Tìm món khác
+                </button>
+            </div>
+        </footer >
+    </div>
+
+    <script>
+        const apiKey = "----"; //  Dán API Key của bạn vào đây thay cho -----
+        const MODEL= "----"; // ĐIỀN MODEL sử dụng của gemini
+        let currentStep = 'budget';
+        let selection = { budget: '', status: '', vibe: '' };
+
+        const chatContainer = document.getElementById('chat-container');
+        const userInput = document.getElementById('user-input');
+
+        // Initial message
+        window.onload = () => {
+            addMessage('bot', 'Chào bạn! Mình là AI Food Agent 🤖. Hôm nay túi tiền của bạn đang có bao nhiêu nè? (Ví dụ: 50k, 200k,...)');
+        };
+
+        function addMessage(role, text) {
+            const div = document.createElement('div');
+            div.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'} animate-in`;
+            
+            const isUser = role === 'user';
+            const icon = isUser ? 'fa-user' : 'fa-robot';
+            const bgClass = isUser ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-white text-slate-800 border border-slate-100 rounded-tl-none';
+            const iconBg = isUser ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-200 text-slate-600';
+
+            div.innerHTML = `
+                <div class="flex gap-2 chat-bubble ${isUser ? 'flex-row-reverse' : 'flex-row'}">
+                    <div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center ${iconBg}">
+                        <i class="fas ${icon} text-xs"></i>
+                    </div>
+                    <div class="p-3 rounded-2xl shadow-sm text-sm leading-relaxed whitespace-pre-wrap ${bgClass}">
+                        ${text}
+                    </div>
+                </div>
+            `;
+            chatContainer.appendChild(div);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function showLoading() {
+            const div = document.createElement('div');
+            div.id = 'loading-indicator';
+            div.className = 'flex justify-start';
+            div.innerHTML = `
+                <div class="bg-white border border-slate-100 p-3 rounded-2xl rounded-tl-none flex gap-1">
+                    <span class="w-1.5 h-1.5 bg-slate-400 rounded-full dot-pulse"></span>
+                    <span class="w-1.5 h-1.5 bg-slate-400 rounded-full dot-pulse" style="animation-delay: 0.2s"></span>
+                    <span class="w-1.5 h-1.5 bg-slate-400 rounded-full dot-pulse" style="animation-delay: 0.4s"></span>
+                </div>
+            `;
+            chatContainer.appendChild(div);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function removeLoading() {
+            const loader = document.getElementById('loading-indicator');
+            if (loader) loader.remove();
+        }
+
+        function handleBudgetSubmit() {
+            const value = userInput.value.trim();
+            if (!value) return;
+
+            selection.budget = value;
+            addMessage('user', value);
+            userInput.value = '';
+            
+            // Switch UI
+            document.getElementById('budget-input').classList.add('hidden');
+            document.getElementById('status-buttons').classList.remove('hidden');
+            
+            setTimeout(() => {
+                addMessage('bot', 'Ok chốt ngân sách! Thế hiện tại tình trạng "Gấu" của bạn thế nào? Để mình biết đường gợi ý quán lãng mạn hay quán "cày" nè.');
+                currentStep = 'status';
+            }, 500);
+        }
+
+        function handleSelection(type, value) {
+            selection[type] = value;
+            addMessage('user', value);
+
+            if (type === 'status') {
+                document.getElementById('status-buttons').classList.add('hidden');
+                document.getElementById('vibe-buttons').classList.remove('hidden');
+                setTimeout(() => {
+                    addMessage('bot', 'Duyệt! Cuối cùng là Vibe hôm nay bạn muốn "nhập cuộc" kiểu gì?');
+                    currentStep = 'vibe';
+                }, 500);
+            } else if (type === 'vibe') {
+                document.getElementById('vibe-buttons').classList.add('hidden');
+                callGeminiAPI();
+            }
+        }
+
+        async function callGeminiAPI() {
+            showLoading();
+            
+            const systemPrompt = `Bạn là một AI Food Agent Gen Z cực kỳ hài hước và am hiểu ẩm thực Việt Nam.
+            Dựa trên: Ngân sách (${selection.budget}), Trạng thái (${selection.status}), Vibe (${selection.vibe}).
+            Hãy gợi ý 5 món ăn phù hợp nhất. Cấu trúc phản hồi:
+            1. Tên món + Giá ước tính.
+            2. Có gì ngon.
+            Sử dụng emoji, ngôn ngữ trẻ trung, không quá trang trọng.`;
+
+            const prompt = `HÃY TẠO PROMPT VÀO ĐÂY`; // HÃY TẠO PROMPT YÊU CẦU GỬI SANG MODEL ĐỂ TẠO KẾT QUẢ
+
+            let retries = 0;
+            const maxRetries = 5;
+            
+            while (retries < maxRetries) {
+                try {
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: prompt }] }],
+                            systemInstruction: { parts: [{ text: systemPrompt }] }
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Hic, server đang bận đi ăn, thử lại sau nhé!";
+                    
+                    removeLoading();
+                    addMessage('bot', aiText);
+                    document.getElementById('reset-btn').classList.remove('hidden');
+                    return;
+                } catch (error) {
+                    const delay = Math.pow(2, retries) * 1000;
+                    await new Promise(res => setTimeout(res, delay));
+                    retries++;
+                }
+            }
+            
+            removeLoading();
+            addMessage('bot', 'Lỗi kết nối rồi bạn ơi, mạng mẽo chán quá! Thử lại phát nữa xem sao.');
+            document.getElementById('reset-btn').classList.remove('hidden');
+        }
+
+        function resetApp() {
+            chatContainer.innerHTML = '';
+            selection = { budget: '', status: '', vibe: '' };
+            currentStep = 'budget';
+            
+            document.getElementById('budget-input').classList.remove('hidden');
+            document.getElementById('status-buttons').classList.add('hidden');
+            document.getElementById('vibe-buttons').classList.add('hidden');
+            document.getElementById('reset-btn').classList.add('hidden');
+            
+            addMessage('bot', 'Chào bạn! Mình quay lại rồi đây. Ngân sách hôm nay thế nào nhỉ?');
+        }
+
+        // Enter key listener
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleBudgetSubmit();
+        });
+    </script>
+</body>
+</html>
